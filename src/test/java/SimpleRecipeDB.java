@@ -125,9 +125,9 @@ public class SimpleRecipeDB extends AbstractContainerRecipeDB<Recipe> {
         var mapFunction = matchFunction(input);
 
         // 查找并打印第一个匹配的配方
-        System.out.println(db.findAnyMatch(ints, mapFunction));
+        System.out.println(db.findAnyMatch(input, ints, mapFunction));
         // 遍历并打印所有匹配的配方
-        for (var r : db.fastSearch(ints, mapFunction)) {
+        for (var r : db.fastSearch(input, ints, mapFunction)) {
             System.out.println(r);
         }
 
@@ -138,7 +138,7 @@ public class SimpleRecipeDB extends AbstractContainerRecipeDB<Recipe> {
         }
         var start = System.currentTimeMillis();
         var rs = list.intStream().parallel()
-                .mapToObj(i -> db.search(ints, mapFunction))
+                .mapToObj(i -> db.search(input, ints, mapFunction))
                 .flatMap(i -> StreamSupport.stream(i.spliterator(), false))
                 .toList();
         db.clear();

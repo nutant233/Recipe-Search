@@ -51,8 +51,8 @@ public abstract class AbstractRecipeDB<R> {
         recipeContainers.put(recipe, container);
     }
 
-    public R findAnyMatch(int[] searchKeys, Function<R, R> recipeProcessor) {
-        R foundRecipe = new RecipeSearcher<>(maxSearchDepth, rootBranch, searchKeys, recipeProcessor, null).findAny();
+    public R findAnyMatch(IntLongMap map, int[] searchKeys, Function<R, R> recipeProcessor) {
+        R foundRecipe = new RecipeSearcher<>(maxSearchDepth, rootBranch, map, searchKeys, recipeProcessor, null).findAny();
         if (foundRecipe != null) return foundRecipe;
         if (!parallelRecipes.isEmpty()) {
             foundRecipe = findInParallel(parallelRecipes, recipeProcessor);
@@ -89,12 +89,12 @@ public abstract class AbstractRecipeDB<R> {
         return iterator == null ? Collections.emptyList() : IteratorUtil.wrap(iterator);
     }
 
-    public Iterable<R> search(int[] searchKeys, Function<R, R> recipeProcessor) {
-        return new RecipeSearcher<>(maxSearchDepth, rootBranch, searchKeys, recipeProcessor, createFallbackIterator(recipeProcessor));
+    public Iterable<R> search(IntLongMap map, int[] searchKeys, Function<R, R> recipeProcessor) {
+        return new RecipeSearcher<>(maxSearchDepth, rootBranch, map, searchKeys, recipeProcessor, createFallbackIterator(recipeProcessor));
     }
 
-    public Iterable<R> fastSearch(int[] searchKeys, Function<R, R> recipeProcessor) {
-        searchContext.reset(rootBranch, searchKeys, recipeProcessor, createFallbackIterator(recipeProcessor));
+    public Iterable<R> fastSearch(IntLongMap map, int[] searchKeys, Function<R, R> recipeProcessor) {
+        searchContext.reset(rootBranch, map, searchKeys, recipeProcessor, createFallbackIterator(recipeProcessor));
         return searchContext;
     }
 
@@ -121,7 +121,7 @@ public abstract class AbstractRecipeDB<R> {
         int lastIndex = depth - 1;
         for (int i = 0; i < depth; i++) {
             boolean isIntermediateNode = i < lastIndex;
-            Node<R> node = currentBranch.getNodes().compute(keys[i], (key, existingNode) -> isIntermediateNode ? Node.branch(branchConstructionTasks, existingNode) : Node.recipe(branchConstructionTasks, existingNode, recipe));
+            Node<R> node = ((Branch.HashBranch<R>) currentBranch).compute(keys[i], (key, existingNode) -> isIntermediateNode ? Node.branch(branchConstructionTasks, existingNode) : Node.recipe(branchConstructionTasks, existingNode, recipe));
             if (isIntermediateNode) {
                 currentBranch = ((Node.BranchNode<R>) node).branch();
             }

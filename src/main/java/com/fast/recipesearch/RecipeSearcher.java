@@ -17,7 +17,8 @@ public class RecipeSearcher<R> implements Iterator<R>, Iterable<R> {
     private boolean hasNext;
     int maxDepth;
     int depth;
-    private int[] ints;
+    IntLongMap map;
+    int[] ints;
     SearchFrame<R>[] frames;
     private Iterator<R> fallback;
 
@@ -31,63 +32,48 @@ public class RecipeSearcher<R> implements Iterator<R>, Iterable<R> {
     }
 
     @SuppressWarnings("unchecked")
-    public RecipeSearcher(int expectedDepth, Branch<R> branch, int[] ints, Function<R, R> mapFunction, Iterator<R> fallback) {
+    public RecipeSearcher(int expectedDepth, Branch<R> branch, IntLongMap map, int[] ints, Function<R, R> mapFunction, Iterator<R> fallback) {
         this.maxDepth = expectedDepth;
         frames = new SearchFrame[expectedDepth];
         for (int i = 0; i < expectedDepth; i++) {
             frames[i] = new SearchFrame<>();
         }
+        this.map = map;
         this.ints = ints;
         this.mapFunction = mapFunction;
         this.fallback = fallback;
-        hasNext = ints.length > 0;
-        frames[0].branch = branch;
+        var length = ints.length;
+        frames[0].push(branch, length, 0);
+        hasNext = length > 0;
     }
 
     public RecipeSearcher() {
         this(1);
     }
 
-    public void reset(Branch<R> branch, int[] ints, Function<R, R> mapFunction, Iterator<R> fallback) {
+    public void reset(Branch<R> branch, IntLongMap map, int[] ints, Function<R, R> mapFunction, Iterator<R> fallback) {
+        this.map = map;
         this.ints = ints;
         this.mapFunction = mapFunction;
         this.fallback = fallback;
-        hasNext = ints.length > 0;
         node = null;
         count = 0;
         depth = 0;
-        var frame = frames[0];
-        frame.branch = branch;
-        frame.index = 0;
-        frame.skip = 0;
+        var length = ints.length;
+        frames[0].push(branch, length, 0);
+        hasNext = length > 0;
     }
 
     public R findAny() {
-        final int[] ints = this.ints;
-        final int length = ints.length;
-        SearchFrame<R> frame;
-        int index;
-        Node<R> node;
         R r;
-
         while (depth >= 0) {
-            frame = frames[depth];
-            while ((index = frame.index) < length) {
-                if ((frame.skip & (1L << index)) == 0) {
-                    node = frame.branch.get(ints[index]);
-                    if (node != null) {
-                        r = node.get(this, frame);
-                        frame.index = index + 1;
-                        if (r != null) {
-                            return r;
-                        }
-                        frame = frames[depth];
-                        continue;
-                    }
-                }
-                frame.index = index + 1;
+            var frame = this.frames[depth];
+            if (frame.branch == null) {
+                r = frame.b(this, depth);
+            } else {
+                r = frame.a(this, depth);
             }
-            depth--;
+            if (r != null) return r;
         }
         return null;
     }
@@ -102,30 +88,14 @@ public class RecipeSearcher<R> implements Iterator<R>, Iterable<R> {
                 }
             }
 
-            final int[] ints = this.ints;
-            final int length = ints.length;
-            SearchFrame<R> frame;
-            int index;
-            Node<R> node;
-
             while (depth >= 0) {
-                frame = frames[depth];
-                while ((index = frame.index) < length) {
-                    if ((frame.skip & (1L << index)) == 0) {
-                        node = frame.branch.get(ints[index]);
-                        if (node != null) {
-                            next = node.get(this, frame);
-                            frame.index = index + 1;
-                            if (next != null) {
-                                return true;
-                            }
-                            frame = frames[depth];
-                            continue;
-                        }
-                    }
-                    frame.index = index + 1;
+                var frame = this.frames[depth];
+                if (frame.branch == null) {
+                    next = frame.b(this, depth);
+                } else {
+                    next = frame.a(this, depth);
                 }
-                depth--;
+                if (next != null) return true;
             }
 
             if (fallback != null && fallback.hasNext()) {

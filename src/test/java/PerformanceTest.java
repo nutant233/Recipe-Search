@@ -1,5 +1,5 @@
-import com.fast.recipesearch.IntLongMap;
 import com.fast.recipesearch.AbstractRecipeDB;
+import com.fast.recipesearch.IntLongMap;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +31,7 @@ public class PerformanceTest {
         testSearchPerformance(db, true);
         while (true) {
             Thread.sleep(10);
-            testSearchPerformance(db, false);
+            testSearchPerformance(db, true);
         }
     }
 
@@ -59,7 +59,7 @@ public class PerformanceTest {
             var mapFunction = SimpleRecipeDB.matchFunction(searchQuery);
             var startTime = System.nanoTime();
             var first = true;
-            for (var ignore : db.fastSearch(ints, mapFunction)) {
+            for (var ignore : db.fastSearch(searchQuery, ints, mapFunction)) {
                 foundRecipes++;
                 if (first) {
                     totalFoundTime += System.nanoTime() - startTime;

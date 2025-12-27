@@ -8,6 +8,15 @@ public class IntLongMap extends Int2LongOpenHashMap {
     public static final IntLongMap EMPTY = new IntLongMap(0) {
 
         @Override
+        public long get(final int k) {
+            return 0;
+        }
+
+        public boolean containsKey(final int k) {
+            return false;
+        }
+
+        @Override
         public void putAll(IntLongMap map) {
         }
 
@@ -64,6 +73,20 @@ public class IntLongMap extends Int2LongOpenHashMap {
             while ((curr = key[pos = (pos + 1) & this.mask]) != 0);
         }
         return 0;
+    }
+
+    @Override
+    public boolean containsKey(final int k) {
+        final int[] key = this.key;
+        int curr;
+        int pos;
+        if ((curr = key[pos = HashCommon.mix(k) & mask]) != 0) {
+            do if (curr == k) {
+                return true;
+            }
+            while ((curr = key[pos = (pos + 1) & this.mask]) != 0);
+        }
+        return false;
     }
 
     public void add(final int k, final long incr) {

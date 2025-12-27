@@ -56,11 +56,9 @@ public interface Node<T> {
 
         @Override
         default T get(RecipeSearcher<T> context, SearchFrame<T> frame) {
-            if (++context.depth == context.maxDepth) expansion(context);
-            var nf = context.frames[context.depth];
-            nf.branch = branch();
-            nf.index = 0;
-            nf.skip = frame.skip | (1L << frame.index);
+            int depth = ++context.depth;
+            if (depth == context.maxDepth) expansion(context);
+            context.frames[depth].push(branch(), context.ints.length - depth, frame.branch == null ? frame.skip : frame.skip | (1L << frame.index));
             return null;
         }
 

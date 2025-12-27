@@ -8,7 +8,7 @@ public class IteratorUtil {
     public static <T> Iterable<T> wrap(Iterator<T> iterator) {
         return () -> iterator;
     }
-    
+
     public static <T> Iterator<T> map(Iterator<T> iterator, Function<T, T> mapFunction) {
         return new Iterator<>() {
 
