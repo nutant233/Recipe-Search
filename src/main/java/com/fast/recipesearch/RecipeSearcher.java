@@ -68,7 +68,7 @@ public class RecipeSearcher<R> implements Iterator<R>, Iterable<R> {
         R r;
         while (depth >= 0) {
             var frame = this.frames[depth];
-            if (frame.branch == null) {
+            if (frame.branchProbe) {
                 r = frame.b(this, depth);
             } else {
                 r = frame.a(this, depth);
@@ -90,7 +90,7 @@ public class RecipeSearcher<R> implements Iterator<R>, Iterable<R> {
 
             while (depth >= 0) {
                 var frame = this.frames[depth];
-                if (frame.branch == null) {
+                if (frame.branchProbe) {
                     next = frame.b(this, depth);
                 } else {
                     next = frame.a(this, depth);
