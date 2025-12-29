@@ -6,7 +6,7 @@ public final class SearchFrame<R> {
     int index;
     long skip;
 
-    Branch<R> branch;
+    private Branch<R> branch;
 
     void push(Branch<R> branch, int size, long skip) {
         this.branchProbe = size > branch.size();
